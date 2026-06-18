@@ -1,0 +1,20 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.idea/
+.vscode/
+
+# Local logs and temporary files
+*.log
+tmp/
+temp/
+
+# Dependency folders are intentionally ignored; this app has no build process.
+node_modules/
+
+.env
+.env.local
+js/config.js
+

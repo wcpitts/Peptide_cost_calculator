@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue 2.0 – Peptide Synthesis Request</title>
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div>
+          <p class="eyebrow">Peptide synthesis worksheet</p>
+          <h1>Liberty Blue 2.0 – Peptide Synthesis Request</h1>
+          <p class="draft-status" id="draftStatus" role="status" aria-live="polite"></p>
+        </div>
+        <div class="header-actions" aria-label="Draft actions">
+          <button class="button button-secondary" type="button" id="saveDraftButton">Save Draft</button>
+          <button class="button button-ghost" type="button" id="loadDraftButton">Load Draft</button>
+          <button class="button button-ghost" type="button" id="clearFormButton">Clear Form</button>
+        </div>
+      </div>
+
+      <nav class="progress" aria-label="Request progress">
+        <ol>
+          <li class="progress-step is-complete">
+            <span class="step-number" aria-hidden="true">1</span>
+            <span>Request Information</span>
+          </li>
+          <li class="progress-step is-complete">
+            <span class="step-number" aria-hidden="true">2</span>
+            <span>Peptide &amp; Method</span>
+          </li>
+          <li class="progress-step is-active" aria-current="step">
+            <span class="step-number" aria-hidden="true">3</span>
+            <span>Amino Acid Requirements</span>
+          </li>
+          <li class="progress-step">
+            <span class="step-number" aria-hidden="true">4</span>
+            <span>Review &amp; Submit</span>
+          </li>
+        </ol>
+      </nav>
+    </header>
+
+    <main class="page-shell">
+      <form class="dashboard-layout" id="requestForm">
+        <div class="main-column">
+          <section class="section-card" aria-labelledby="peptideSequenceHeading">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Step 3 input</p>
+                <h2 id="peptideSequenceHeading">Peptide Sequence</h2>
+              </div>
+              <button class="button" type="button" id="analyzeButton">Analyze Sequence</button>
+            </div>
+
+            <div class="field-stack">
+              <label for="peptideSequence">Amino acid sequence</label>
+              <p class="field-help" id="sequenceHelp">Enter the peptide sequence using standard one-letter amino-acid codes. Spaces and line breaks will be ignored. Common terminal labels such as Ac-, H-, -OH, -NH2, and -NH₂ are accepted.</p>
+              <textarea id="peptideSequence" name="peptideSequence" rows="8" spellcheck="false" autocomplete="off" aria-describedby="sequenceHelp sequenceValidation" placeholder="Examples: GILLYK, Ac-GILLYK-NH2, H-GILLYK-OH">Ac-GILLYK-NH2</textarea>
+              <p class="validation-message" id="sequenceValidation" role="status" aria-live="polite"></p>
+            </div>
+
+            <div class="form-grid form-grid-three">
+              <div class="field-stack">
+                <label for="sequenceName">Peptide name</label>
+                <input id="sequenceName" name="sequenceName" type="text" value="Example peptide">
+              </div>
+              <div class="field-stack">
+                <label for="nTerminus">N-terminus</label>
+                <select id="nTerminus" name="nTerminus">
+                  <option value="free">Free amine</option>
+                  <option value="acetylated">Acetylated</option>
+                </select>
+              </div>
+              <div class="field-stack">
+                <label for="cTerminus">C-terminus</label>
+                <select id="cTerminus" name="cTerminus">
+                  <option value="acid">Free acid</option>
+                  <option value="amide">Amide</option>
+                </select>
+              </div>
+            </div>
+
+            <details class="advanced-options">
+              <summary>Advanced Options</summary>
+              <div class="logic-placeholder">
+                Placeholder for nonstandard amino acids, custom protecting groups, and modified-residue handling in later tasks.
+              </div>
+            </details>
+          </section>
+
+          <section class="section-card" aria-labelledby="sequenceAnalysisHeading">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Automatic diagnostics</p>
+                <h2 id="sequenceAnalysisHeading">Automatic Sequence Analysis</h2>
+              </div>
+              <span class="status-pill" id="analysisStatus">Ready</span>
+            </div>
+
+            <div class="metric-grid analysis-grid" aria-live="polite">
+              <div class="metric-card">
+                <span class="metric-label">Original Input</span>
+                <strong class="sequence-output" id="metricOriginalSequence">Not analyzed</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Normalized Sequence</span>
+                <strong class="sequence-output" id="metricNormalizedSequence">Not analyzed</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Peptide Length</span>
+                <strong id="metricLength">0 aa</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">N-terminal Form</span>
+                <strong id="metricNTerminus">Free amine</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">C-terminal Form</span>
+                <strong id="metricCTerminus">Carboxylic acid</strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Estimated MW</span>
+                <strong id="metricMass">0 Da</strong>
+              </div>
+            </div>
+
+            <div class="logic-placeholder" id="sequenceWarnings" role="status" aria-live="polite">
+              Sequence diagnostics will update after analysis.
+            </div>
+
+            <div class="analysis-subsection" aria-labelledby="compositionHeading">
+              <h3 id="compositionHeading">Amino-acid composition</h3>
+              <div class="composition-list" id="compositionSummary" aria-live="polite">
+                Analyze a valid sequence to view composition.
+              </div>
+            </div>
+
+            <div class="table-shell analysis-table-shell" tabindex="0" aria-label="Amino acid composition table">
+              <table class="data-table composition-table" id="compositionTable">
+                <caption>Residue counts, percentages, and normalized sequence positions</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">AA</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Building Block</th>
+                    <th scope="col">Count</th>
+                    <th scope="col">Percentage</th>
+                    <th scope="col">Positions</th>
+                  </tr>
+                </thead>
+                <tbody id="compositionTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section-card" aria-labelledby="synthesisSettingsHeading">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Method assumptions</p>
+                <h2 id="synthesisSettingsHeading">Synthesis Settings</h2>
+              </div>
+            </div>
+
+            <div class="form-grid form-grid-three">
+              <div class="field-stack">
+                <label for="synthesisScale">Synthesis scale</label>
+                <div class="input-with-unit">
+                  <input id="synthesisScale" name="synthesisScale" type="number" min="0.0001" step="0.01" value="0.10" inputmode="decimal" aria-describedby="synthesisScaleUnit">
+                  <span id="synthesisScaleUnit">mmol</span>
+                </div>
+              </div>
+              <div class="field-stack">
+                <label for="couplingEquivalents">Coupling equivalents</label>
+                <input id="couplingEquivalents" name="couplingEquivalents" type="number" min="0.0001" step="0.1" value="5" inputmode="decimal">
+              </div>
+              <div class="field-stack">
+                <label for="overagePercent">Overage factor</label>
+                <div class="input-with-unit">
+                  <input id="overagePercent" name="overagePercent" type="number" min="0" step="0.1" value="10" inputmode="decimal" aria-describedby="overagePercentUnit">
+                  <span id="overagePercentUnit">%</span>
+                </div>
+              </div>
+              <div class="field-stack">
+                <label for="couplingMode">Coupling mode</label>
+                <select id="couplingMode" name="couplingMode">
+                  <option value="standard" selected>Standard coupling</option>
+                  <option value="double-all">Double-couple all residues</option>
+                  <option value="selected-residue">Double-couple selected amino acids</option>
+                  <option value="selected-position">Double-couple selected sequence positions</option>
+                </select>
+              </div>
+              <div class="field-stack">
+                <label for="washOption">Wash option</label>
+                <select id="washOption" name="washOption">
+                  <option value="none" selected>No additional washes</option>
+                  <option value="standard">Standard washes</option>
+                  <option value="custom">Custom number of washes</option>
+                </select>
+              </div>
+              <div class="field-stack is-hidden" id="customWashField">
+                <label for="customWashCount">Custom wash count</label>
+                <input id="customWashCount" name="customWashCount" type="number" min="0" step="1" value="0" inputmode="numeric">
+              </div>
+            </div>
+
+            <div class="position-selector is-hidden" id="positionSelectorPanel" aria-live="polite">
+              <div class="position-selector-heading">
+                <h3>Double-couple selected sequence positions</h3>
+                <button class="button button-ghost button-small" type="button" id="clearPositionsButton">Clear Positions</button>
+              </div>
+              <div class="sequence-position-list" id="sequencePositionList"></div>
+            </div>
+
+            <p class="validation-message" id="calculationValidation" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="section-card" aria-labelledby="aaRequirementsHeading">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Calculated requirements</p>
+                <h2 id="aaRequirementsHeading">Amino Acid Requirements</h2>
+              </div>
+              <div class="table-actions">
+                <button class="button" type="button" id="addCustomAaButton">Add Nonstandard Amino Acid</button>
+                <button class="button button-secondary" type="button" id="recalculateButton">Recalculate All</button>
+              </div>
+            </div>
+
+            <div class="table-shell" tabindex="0" aria-label="Amino acid requirements table">
+              <table class="data-table" id="aaTable">
+                <caption>Amino acid requirement calculations and source selections</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Selection</th>
+                    <th scope="col">AA Code</th>
+                    <th scope="col">Protected Amino Acid</th>
+                    <th scope="col">Molecular Weight</th>
+                    <th scope="col">Count in Sequence</th>
+                    <th scope="col">Equivalents per Coupling</th>
+                    <th scope="col">Number of Coupling Cycles</th>
+                    <th scope="col">Total Equivalents</th>
+                    <th scope="col">Amount Required (mmol)</th>
+                    <th scope="col">Amount Required (g)</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">Unit Price ($/g)</th>
+                    <th scope="col">Estimated Cost ($)</th>
+                    <th scope="col">Reset Override</th>
+                  </tr>
+                </thead>
+                <tbody id="aaTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="table-totals" aria-live="polite">
+              <div class="totals-grid">
+                <div>
+                  <span>Number of unique amino acids</span>
+                  <strong id="totalUniqueAminoAcids">0</strong>
+                </div>
+                <div>
+                  <span>Hematian Lab amino-acid subtotal</span>
+                  <strong id="labAminoAcidSubtotal">$0.00</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card" aria-labelledby="hematianReagentsHeading">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Lab consumables</p>
+                <h2 id="hematianReagentsHeading">Hematian Lab Reagents</h2>
+              </div>
+            </div>
+
+            <div class="policy-callout" role="note">
+              All syntheses must use DMF and pyrrolidine supplied by the Hematian Lab. Requester-supplied DMF or pyrrolidine is not permitted.
+            </div>
+
+            <div class="table-shell compact-table" tabindex="0" aria-label="Hematian lab reagents table">
+              <table class="data-table">
+                <caption>Estimated Hematian Lab DMF and pyrrolidine usage</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Reagent</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Estimated Volume</th>
+                    <th scope="col">Unit Price</th>
+                    <th scope="col">Estimated Cost</th>
+                  </tr>
+                </thead>
+                <tbody id="reagentTableBody"></tbody>
+              </table>
+            </div>
+
+            <div class="logic-placeholder" id="reagentConfigNotice" role="status" aria-live="polite">
+              DMF and pyrrolidine estimates are unavailable until the Hematian Lab configures instrument-specific reagent-use values.
+            </div>
+
+            <div class="reagent-breakdown" id="reagentBreakdown" aria-live="polite">
+              <div>
+                <span>DMF used for coupling</span>
+                <strong id="dmfCouplingVolume">Unavailable</strong>
+              </div>
+              <div>
+                <span>DMF used for deprotection</span>
+                <strong id="dmfDeprotectionVolume">Unavailable</strong>
+              </div>
+              <div>
+                <span>DMF used for washes</span>
+                <strong id="dmfWashVolume">Unavailable</strong>
+              </div>
+              <div>
+                <span>Total DMF</span>
+                <strong id="dmfTotalVolume">Unavailable</strong>
+              </div>
+              <div>
+                <span>Pyrrolidine solution used for deprotection</span>
+                <strong id="pyrrolidineDeprotectionVolume">Unavailable</strong>
+              </div>
+              <div>
+                <span>Coupling / deprotection / wash cycles</span>
+                <strong id="reagentCycleSummary">Unavailable</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card requester-card" aria-labelledby="requesterHeading">
+            <details class="section-details" open>
+              <summary>
+                <span>
+                  <span class="section-kicker">Request metadata</span>
+                  <span class="details-title" id="requesterHeading">Requester Information</span>
+                </span>
+              </summary>
+
+              <div class="details-content">
+                <div class="form-grid form-grid-two">
+                  <div class="field-stack">
+                    <label for="requesterName">Requester name</label>
+                    <input id="requesterName" name="requesterName" type="text" autocomplete="name">
+                  </div>
+                  <div class="field-stack">
+                    <label for="requesterEmail">Institutional email</label>
+                    <input id="requesterEmail" name="requesterEmail" type="email" autocomplete="email" aria-describedby="requesterValidation">
+                  </div>
+                  <div class="field-stack">
+                    <label for="departmentProgram">Department or program</label>
+                    <input id="departmentProgram" name="departmentProgram" type="text">
+                  </div>
+                  <div class="field-stack">
+                    <label for="labGroup">Laboratory or research group</label>
+                    <input id="labGroup" name="labGroup" type="text">
+                  </div>
+                  <div class="field-stack">
+                    <label for="piName">PI name</label>
+                    <input id="piName" name="piName" type="text">
+                  </div>
+                  <div class="field-stack">
+                    <label for="piEmail">PI email</label>
+                    <input id="piEmail" name="piEmail" type="email" autocomplete="email" aria-describedby="requesterValidation">
+                  </div>
+                  <div class="field-stack">
+                    <label for="targetDate">Requested completion date</label>
+                    <input id="targetDate" name="targetDate" type="date">
+                  </div>
+                  <div class="field-stack">
+                    <label for="firstSchedulingWindow">First preferred scheduling window</label>
+                    <input id="firstSchedulingWindow" name="firstSchedulingWindow" type="text" placeholder="Example: Week of July 8">
+                  </div>
+                  <div class="field-stack">
+                    <label for="secondSchedulingWindow">Second preferred scheduling window</label>
+                    <input id="secondSchedulingWindow" name="secondSchedulingWindow" type="text" placeholder="Example: Week of July 15">
+                  </div>
+                  <div class="field-stack">
+                    <label for="synthesisExperience">Previous automated peptide-synthesis experience</label>
+                    <select id="synthesisExperience" name="synthesisExperience">
+                      <option value="">Select experience level</option>
+                      <option value="none">No previous automated synthesis experience</option>
+                      <option value="limited">Limited supervised experience</option>
+                      <option value="experienced">Experienced independent operator</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field-stack">
+                  <label for="requestNotes">Additional synthesis comments</label>
+                  <textarea id="requestNotes" name="requestNotes" rows="4"></textarea>
+                </div>
+
+                <fieldset class="acknowledgment-list">
+                  <legend>Required acknowledgments</legend>
+                  <label class="check-control" for="ackDmfLab">
+                    <input id="ackDmfLab" name="ackDmfLab" type="checkbox" required data-acknowledgment>
+                    <span>All DMF must come from the Hematian Lab.</span>
+                  </label>
+                  <label class="check-control" for="ackPyrrolidineLab">
+                    <input id="ackPyrrolidineLab" name="ackPyrrolidineLab" type="checkbox" required data-acknowledgment>
+                    <span>All pyrrolidine must come from the Hematian Lab.</span>
+                  </label>
+                  <label class="check-control" for="ackRequesterAaApproval">
+                    <input id="ackRequesterAaApproval" name="ackRequesterAaApproval" type="checkbox" required data-acknowledgment>
+                    <span>Requester-supplied amino acids require approval.</span>
+                  </label>
+                  <label class="check-control" for="ackPreliminaryEstimate">
+                    <input id="ackPreliminaryEstimate" name="ackPreliminaryEstimate" type="checkbox" required data-acknowledgment>
+                    <span>The estimate is preliminary.</span>
+                  </label>
+                  <label class="check-control" for="ackNoReservation">
+                    <input id="ackNoReservation" name="ackNoReservation" type="checkbox" required data-acknowledgment>
+                    <span>Submission does not reserve instrument time.</span>
+                  </label>
+                  <label class="check-control" for="ackApprovalTraining">
+                    <input id="ackApprovalTraining" name="ackApprovalTraining" type="checkbox" required data-acknowledgment>
+                    <span>Operation requires approval and any required training.</span>
+                  </label>
+                </fieldset>
+
+                <p class="validation-message" id="requesterValidation" role="status" aria-live="polite"></p>
+
+                <div class="submission-placeholder">
+                  <button class="button" type="button" id="submitApprovalButton" disabled>Submit for Hematian Lab Approval</button>
+                  <p>Secure submission will be implemented through the planned backend and is not active in this static GitHub Pages version.</p>
+                </div>
+              </div>
+            </details>
+          </section>
+
+          <section class="section-card" aria-labelledby="reviewExportHeading">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Local review</p>
+                <h2 id="reviewExportHeading">Review &amp; Export</h2>
+              </div>
+              <div class="table-actions export-actions">
+                <button class="button" type="button" id="reviewButton">Review Request</button>
+                <button class="button button-secondary" type="button" id="exportJsonButton">Export full request as JSON</button>
+                <button class="button button-secondary" type="button" id="exportCsvButton">Export amino-acid and cost estimate as CSV</button>
+                <button class="button button-ghost" type="button" id="printButton">Print or Save as PDF</button>
+              </div>
+            </div>
+
+            <p class="validation-message" id="reviewValidation" role="status" aria-live="polite"></p>
+
+            <div class="review-box" id="reviewSummary" tabindex="-1">
+              Review details will appear here before export workflows are added.
+            </div>
+          </section>
+        </div>
+
+        <aside class="side-column" aria-labelledby="costEstimateHeading">
+          <section class="section-card cost-panel">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Live worksheet</p>
+                <h2 id="costEstimateHeading">Preliminary Cost Estimate</h2>
+              </div>
+            </div>
+
+            <div class="cost-total" aria-live="polite">
+              <span id="estimateTotalLabel">Estimated total</span>
+              <strong id="estimatedTotal">$0.00</strong>
+              <span class="cost-total-detail" id="estimatedTotalDetail">Awaiting a valid sequence.</span>
+            </div>
+
+            <div class="cost-section" aria-labelledby="costAminoAcidsHeading">
+              <h3 id="costAminoAcidsHeading">Amino acids</h3>
+              <dl class="cost-list">
+                <div>
+                  <dt>Hematian Lab stock subtotal</dt>
+                  <dd id="aminoAcidCost">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Requester-supplied amino-acid mass</dt>
+                  <dd id="costRequesterMass">0.000 g</dd>
+                </div>
+                <div>
+                  <dt>Requester-supplied charged subtotal</dt>
+                  <dd id="costRequesterSubtotal">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Total amino-acid cost</dt>
+                  <dd id="costAminoAcidTotal">$0.00</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="cost-section" aria-labelledby="costReagentsHeading">
+              <h3 id="costReagentsHeading">Hematian Lab reagents</h3>
+              <p class="field-help">Total DMF includes DMF used for coupling, deprotection, and any selected wash cycles.</p>
+              <dl class="cost-list">
+                <div>
+                  <dt>Total DMF amount</dt>
+                  <dd id="costDmfAmount">Configuration required</dd>
+                </div>
+                <div>
+                  <dt>Total DMF cost</dt>
+                  <dd id="costDmfCost">Configuration required</dd>
+                </div>
+                <div>
+                  <dt>Pyrrolidine solution amount</dt>
+                  <dd id="costPyrrolidineAmount">Config required</dd>
+                </div>
+                <div>
+                  <dt>Pyrrolidine solution cost</dt>
+                  <dd id="costPyrrolidineCost">Config required</dd>
+                </div>
+              </dl>
+              <details class="cost-breakdown">
+                <summary>View DMF calculation breakdown</summary>
+                <dl class="cost-list compact-cost-list">
+                  <div>
+                    <dt>DMF used for coupling</dt>
+                    <dd id="costDmfCouplingAmount">Configuration required</dd>
+                  </div>
+                  <div>
+                    <dt>DMF used for deprotection</dt>
+                    <dd id="costDmfDeprotectionAmount">Configuration required</dd>
+                  </div>
+                  <div>
+                    <dt>DMF used for washes</dt>
+                    <dd id="costDmfWashAmount">Configuration required</dd>
+                  </div>
+                  <div>
+                    <dt>Total DMF amount</dt>
+                    <dd id="costDmfTotalBreakdownAmount">Configuration required</dd>
+                  </div>
+                </dl>
+              </details>
+              <div class="missing-config" id="missingReagentConfig" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="cost-section" aria-labelledby="costMethodHeading">
+              <h3 id="costMethodHeading">Method-related estimates</h3>
+              <p class="field-help">The wash-associated DMF shown below is already included in the Total DMF amount and Total DMF cost above. It is shown here only to explain the cost impact of the selected wash method.</p>
+              <p class="field-help">Configurable charges default to $0.00.</p>
+              <dl class="cost-list method-wash-breakdown" aria-label="Wash-associated reagent cost breakdown">
+                <div>
+                  <dt>Wash option</dt>
+                  <dd id="costWashOption">No additional washes</dd>
+                </div>
+                <div>
+                  <dt>Effective wash count</dt>
+                  <dd id="costWashCount">0</dd>
+                </div>
+                <div>
+                  <dt>DMF attributable to washes</dt>
+                  <dd id="costWashDmfAmount">0.000 L</dd>
+                </div>
+                <div>
+                  <dt>DMF cost attributable to washes</dt>
+                  <dd id="costWashDmfCost">$0.00</dd>
+                </div>
+              </dl>
+              <div class="method-charge-grid">
+                <div class="field-stack">
+                  <label for="methodDoubleCouplingCharge">Additional double-coupling cycles (configurable)</label>
+                  <div class="input-with-unit">
+                    <input id="methodDoubleCouplingCharge" name="methodDoubleCouplingCharge" type="number" min="0" step="0.01" value="0" inputmode="decimal" data-method-charge>
+                    <span>$</span>
+                  </div>
+                </div>
+                <div class="field-stack">
+                  <label for="methodContingencyCharge">Other or contingency charge (configurable)</label>
+                  <div class="input-with-unit">
+                    <input id="methodContingencyCharge" name="methodContingencyCharge" type="number" min="0" step="0.01" value="0" inputmode="decimal" data-method-charge>
+                    <span>$</span>
+                  </div>
+                </div>
+              </div>
+              <dl class="cost-list">
+                <div>
+                  <dt>Method-related subtotal</dt>
+                  <dd id="methodChargeSubtotal">$0.00</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="estimate-note" id="estimateNote" role="status" aria-live="polite">
+              Enter a sequence and analyze it to update the estimate.
+            </div>
+
+            <div class="cost-actions">
+              <button class="button" type="button" id="panelRecalculateButton">Recalculate All</button>
+              <button class="button button-secondary" type="button" id="panelReviewButton">Review Request</button>
+            </div>
+          </section>
+        </aside>
+      </form>
+    </main>
+
+    <script src="js/amino-acids.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
