@@ -290,3 +290,352 @@ create table if not exists public.reagent_price_history (
 
 create index if not exists reagent_price_history_reagent_id_idx
   on public.reagent_price_history(reagent_id);
+
+-- Helper functions for role-aware Row Level Security policies.
+-- These functions check the authenticated user's active profile role.
+create or replace function public.current_user_role()
+returns text
+language sql
+security definer
+set search_path = public
+as $$
+  select p.role
+  from public.profiles p
+  where p.id = auth.uid()
+    and p.active = true
+  limit 1;
+$$;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(public.current_user_role() = 'admin', false);
+$$;
+
+create or replace function public.is_reviewer()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(public.current_user_role() = 'reviewer', false);
+$$;
+
+create or replace function public.is_admin_or_reviewer()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(public.current_user_role() in ('admin', 'reviewer'), false);
+$$;
+
+-- Generic updated_at trigger support.
+-- Keeps updated_at current when editable records are modified.
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_set_updated_at on public.profiles;
+
+create trigger profiles_set_updated_at
+before update on public.profiles
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists reagents_set_updated_at on public.reagents;
+
+create trigger reagents_set_updated_at
+before update on public.reagents
+for each row
+execute function public.set_updated_at();
+
+drop trigger if exists synthesis_requests_set_updated_at on public.synthesis_requests;
+
+create trigger synthesis_requests_set_updated_at
+before update on public.synthesis_requests
+for each row
+execute function public.set_updated_at();
+
+-- Reagent price-history trigger support.
+-- Records changes to price-relevant catalog fields for auditability.
+create or replace function public.record_reagent_price_history()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_changed_by uuid;
+begin
+  select p.id
+  into v_changed_by
+  from public.profiles p
+  where p.id = auth.uid()
+  limit 1;
+
+  if old.package_quantity is distinct from new.package_quantity then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'package_quantity',
+      to_jsonb(old.package_quantity),
+      to_jsonb(new.package_quantity),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  if old.package_unit is distinct from new.package_unit then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'package_unit',
+      to_jsonb(old.package_unit),
+      to_jsonb(new.package_unit),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  if old.package_cost is distinct from new.package_cost then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'package_cost',
+      to_jsonb(old.package_cost),
+      to_jsonb(new.package_cost),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  if old.normalized_unit_cost is distinct from new.normalized_unit_cost then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'normalized_unit_cost',
+      to_jsonb(old.normalized_unit_cost),
+      to_jsonb(new.normalized_unit_cost),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  if old.billing_unit is distinct from new.billing_unit then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'billing_unit',
+      to_jsonb(old.billing_unit),
+      to_jsonb(new.billing_unit),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  if old.effective_date is distinct from new.effective_date then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'effective_date',
+      to_jsonb(old.effective_date),
+      to_jsonb(new.effective_date),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  if old.active is distinct from new.active then
+    insert into public.reagent_price_history (
+      reagent_id,
+      field_changed,
+      old_value,
+      new_value,
+      effective_date,
+      changed_by
+    )
+    values (
+      new.id,
+      'active',
+      to_jsonb(old.active),
+      to_jsonb(new.active),
+      new.effective_date,
+      v_changed_by
+    );
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists reagents_record_price_history on public.reagents;
+
+create trigger reagents_record_price_history
+after update on public.reagents
+for each row
+execute function public.record_reagent_price_history();
+
+-- Request status-history trigger support.
+-- Records the initial request status and all later request status transitions.
+create or replace function public.record_request_status_history()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  v_changed_by uuid;
+begin
+  select p.id
+  into v_changed_by
+  from public.profiles p
+  where p.id = auth.uid()
+  limit 1;
+
+  if tg_op = 'INSERT' then
+    insert into public.request_status_history (
+      request_id,
+      old_status,
+      new_status,
+      reason,
+      changed_by
+    )
+    values (
+      new.id,
+      null,
+      new.status,
+      'Initial request status',
+      v_changed_by
+    );
+
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' and old.status is distinct from new.status then
+    insert into public.request_status_history (
+      request_id,
+      old_status,
+      new_status,
+      reason,
+      changed_by
+    )
+    values (
+      new.id,
+      old.status,
+      new.status,
+      null,
+      v_changed_by
+    );
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists synthesis_requests_record_status_history
+  on public.synthesis_requests;
+
+create trigger synthesis_requests_record_status_history
+after insert or update of status on public.synthesis_requests
+for each row
+execute function public.record_request_status_history();
+
+-- Row Level Security foundation.
+-- Policies are added in later steps; this section only enables RLS on Liberty Blue tables.
+alter table public.profiles enable row level security;
+alter table public.reagents enable row level security;
+alter table public.reagent_price_history enable row level security;
+alter table public.synthesis_requests enable row level security;
+alter table public.request_reagents enable row level security;
+alter table public.request_status_history enable row level security;
+alter table public.request_notes enable row level security;
+
+-- Public calculator catalog RPC.
+-- Exposes only active reagent fields needed for calculator estimates.
+-- Does not expose full reagent records, price history, users, requests, notes, or administrative fields.
+create or replace function public.get_active_reagent_catalog()
+returns table (
+  id uuid,
+  code text,
+  display_name text,
+  category text,
+  building_block text,
+  molecular_weight numeric,
+  billing_unit text,
+  normalized_unit_cost numeric,
+  effective_date date,
+  active boolean
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    r.id,
+    r.code,
+    r.display_name,
+    r.category,
+    r.building_block,
+    r.molecular_weight,
+    r.billing_unit,
+    r.normalized_unit_cost,
+    r.effective_date,
+    r.active
+  from public.reagents r
+  where r.active = true
+  order by r.category, r.code, r.display_name;
+$$;
+
+grant execute on function public.get_active_reagent_catalog() to anon;
+grant execute on function public.get_active_reagent_catalog() to authenticated;
