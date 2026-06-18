@@ -639,3 +639,380 @@ $$;
 
 grant execute on function public.get_active_reagent_catalog() to anon;
 grant execute on function public.get_active_reagent_catalog() to authenticated;
+
+-- Profiles RLS policies.
+-- Users may read their own active profile. Admins may manage all profiles.
+drop policy if exists "Users can read own profile" on public.profiles;
+
+create policy "Users can read own profile"
+on public.profiles
+for select
+to authenticated
+using (
+  id = auth.uid()
+);
+
+drop policy if exists "Admins can read all profiles" on public.profiles;
+
+create policy "Admins can read all profiles"
+on public.profiles
+for select
+to authenticated
+using (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can insert profiles" on public.profiles;
+
+create policy "Admins can insert profiles"
+on public.profiles
+for insert
+to authenticated
+with check (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can update profiles" on public.profiles;
+
+create policy "Admins can update profiles"
+on public.profiles
+for update
+to authenticated
+using (
+  public.is_admin()
+)
+with check (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can delete profiles" on public.profiles;
+
+create policy "Admins can delete profiles"
+on public.profiles
+for delete
+to authenticated
+using (
+  public.is_admin()
+);
+
+-- Reagents RLS policies.
+-- Admins and reviewers may read full reagent records.
+-- Only admins may create, update, or delete reagent records.
+-- Anonymous calculator access should use get_active_reagent_catalog(), not direct table reads.
+drop policy if exists "Admins and reviewers can read reagents" on public.reagents;
+
+create policy "Admins and reviewers can read reagents"
+on public.reagents
+for select
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+);
+
+drop policy if exists "Admins can insert reagents" on public.reagents;
+
+create policy "Admins can insert reagents"
+on public.reagents
+for insert
+to authenticated
+with check (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can update reagents" on public.reagents;
+
+create policy "Admins can update reagents"
+on public.reagents
+for update
+to authenticated
+using (
+  public.is_admin()
+)
+with check (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can delete reagents" on public.reagents;
+
+create policy "Admins can delete reagents"
+on public.reagents
+for delete
+to authenticated
+using (
+  public.is_admin()
+);
+
+-- Synthesis request read policies.
+-- Requesters may read their own requests. Admins and reviewers may read all requests.
+drop policy if exists "Requesters can read own synthesis requests" on public.synthesis_requests;
+
+create policy "Requesters can read own synthesis requests"
+on public.synthesis_requests
+for select
+to authenticated
+using (
+  requester_user_id = auth.uid()
+);
+
+drop policy if exists "Admins and reviewers can read all synthesis requests" on public.synthesis_requests;
+
+create policy "Admins and reviewers can read all synthesis requests"
+on public.synthesis_requests
+for select
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+);
+
+-- Synthesis request admin write policies.
+-- Admins may manage request records directly.
+-- Reviewer status actions should be handled later through controlled functions/RPCs.
+drop policy if exists "Admins can insert synthesis requests" on public.synthesis_requests;
+
+create policy "Admins can insert synthesis requests"
+on public.synthesis_requests
+for insert
+to authenticated
+with check (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can update synthesis requests" on public.synthesis_requests;
+
+create policy "Admins can update synthesis requests"
+on public.synthesis_requests
+for update
+to authenticated
+using (
+  public.is_admin()
+)
+with check (
+  public.is_admin()
+);
+
+drop policy if exists "Admins can delete synthesis requests" on public.synthesis_requests;
+
+create policy "Admins can delete synthesis requests"
+on public.synthesis_requests
+for delete
+to authenticated
+using (
+  public.is_admin()
+);
+
+-- Request reagent snapshot RLS policies.
+-- Requesters may read snapshots for their own requests. Admins and reviewers may read all snapshots.
+-- Historical snapshots should not be casually overwritten.
+drop policy if exists "Requesters can read own request reagent snapshots" on public.request_reagents;
+
+create policy "Requesters can read own request reagent snapshots"
+on public.request_reagents
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.synthesis_requests sr
+    where sr.id = request_reagents.request_id
+      and sr.requester_user_id = auth.uid()
+  )
+);
+
+drop policy if exists "Admins and reviewers can read all request reagent snapshots" on public.request_reagents;
+
+create policy "Admins and reviewers can read all request reagent snapshots"
+on public.request_reagents
+for select
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+);
+
+-- Request status-history RLS policies.
+-- Requesters may read history for their own requests. Admins and reviewers may read all history.
+-- Admins and reviewers may insert history rows created by approved status workflows.
+drop policy if exists "Requesters can read own request status history" on public.request_status_history;
+
+create policy "Requesters can read own request status history"
+on public.request_status_history
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.synthesis_requests sr
+    where sr.id = request_status_history.request_id
+      and sr.requester_user_id = auth.uid()
+  )
+);
+
+drop policy if exists "Admins and reviewers can read all request status history" on public.request_status_history;
+
+create policy "Admins and reviewers can read all request status history"
+on public.request_status_history
+for select
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+);
+
+drop policy if exists "Admins and reviewers can insert request status history" on public.request_status_history;
+
+create policy "Admins and reviewers can insert request status history"
+on public.request_status_history
+for insert
+to authenticated
+with check (
+  public.is_admin_or_reviewer()
+);
+
+-- Request notes RLS policies.
+-- Internal notes are visible only to admins/reviewers.
+-- Requesters may read only non-internal notes attached to their own requests.
+drop policy if exists "Requesters can read own external notes" on public.request_notes;
+
+create policy "Requesters can read own external notes"
+on public.request_notes
+for select
+to authenticated
+using (
+  is_internal = false
+  and exists (
+    select 1
+    from public.synthesis_requests sr
+    where sr.id = request_notes.request_id
+      and sr.requester_user_id = auth.uid()
+  )
+);
+
+drop policy if exists "Admins and reviewers can read all request notes" on public.request_notes;
+
+create policy "Admins and reviewers can read all request notes"
+on public.request_notes
+for select
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+);
+
+drop policy if exists "Admins and reviewers can insert request notes" on public.request_notes;
+
+create policy "Admins and reviewers can insert request notes"
+on public.request_notes
+for insert
+to authenticated
+with check (
+  public.is_admin_or_reviewer()
+);
+
+drop policy if exists "Admins and reviewers can update request notes" on public.request_notes;
+
+create policy "Admins and reviewers can update request notes"
+on public.request_notes
+for update
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+)
+with check (
+  public.is_admin_or_reviewer()
+);
+
+drop policy if exists "Admins can delete request notes" on public.request_notes;
+
+create policy "Admins can delete request notes"
+on public.request_notes
+for delete
+to authenticated
+using (
+  public.is_admin()
+);
+
+-- Reagent price-history RLS policies.
+-- Admins and reviewers may read price history. Admins may insert trigger-created history rows.
+-- Update/delete policies are intentionally omitted to preserve the audit trail.
+drop policy if exists "Admins and reviewers can read reagent price history" on public.reagent_price_history;
+
+create policy "Admins and reviewers can read reagent price history"
+on public.reagent_price_history
+for select
+to authenticated
+using (
+  public.is_admin_or_reviewer()
+);
+
+drop policy if exists "Admins can insert reagent price history" on public.reagent_price_history;
+
+create policy "Admins can insert reagent price history"
+on public.reagent_price_history
+for insert
+to authenticated
+with check (
+  public.is_admin()
+);
+
+-- Placeholder seed data for standard protected Fmoc amino acids.
+-- Prices are placeholders and must be replaced before production use.
+with amino_acid_seed (
+  code,
+  display_name,
+  building_block,
+  molecular_weight
+) as (
+  values
+    ('A', 'Fmoc-Ala-OH', 'Fmoc-Ala-OH', 311.34),
+    ('R', 'Fmoc-Arg(Pbf)-OH', 'Fmoc-Arg(Pbf)-OH', 648.78),
+    ('N', 'Fmoc-Asn(Trt)-OH', 'Fmoc-Asn(Trt)-OH', 596.68),
+    ('D', 'Fmoc-Asp(OtBu)-OH', 'Fmoc-Asp(OtBu)-OH', 411.45),
+    ('C', 'Fmoc-Cys(Trt)-OH', 'Fmoc-Cys(Trt)-OH', 585.72),
+    ('Q', 'Fmoc-Gln(Trt)-OH', 'Fmoc-Gln(Trt)-OH', 610.71),
+    ('E', 'Fmoc-Glu(OtBu)-OH', 'Fmoc-Glu(OtBu)-OH', 425.48),
+    ('G', 'Fmoc-Gly-OH', 'Fmoc-Gly-OH', 297.31),
+    ('H', 'Fmoc-His(Trt)-OH', 'Fmoc-His(Trt)-OH', 619.72),
+    ('I', 'Fmoc-Ile-OH', 'Fmoc-Ile-OH', 353.42),
+    ('L', 'Fmoc-Leu-OH', 'Fmoc-Leu-OH', 353.42),
+    ('K', 'Fmoc-Lys(Boc)-OH', 'Fmoc-Lys(Boc)-OH', 468.55),
+    ('M', 'Fmoc-Met-OH', 'Fmoc-Met-OH', 371.45),
+    ('F', 'Fmoc-Phe-OH', 'Fmoc-Phe-OH', 387.44),
+    ('P', 'Fmoc-Pro-OH', 'Fmoc-Pro-OH', 337.37),
+    ('S', 'Fmoc-Ser(tBu)-OH', 'Fmoc-Ser(tBu)-OH', 383.44),
+    ('T', 'Fmoc-Thr(tBu)-OH', 'Fmoc-Thr(tBu)-OH', 397.47),
+    ('W', 'Fmoc-Trp(Boc)-OH', 'Fmoc-Trp(Boc)-OH', 526.59),
+    ('Y', 'Fmoc-Tyr(tBu)-OH', 'Fmoc-Tyr(tBu)-OH', 459.54),
+    ('V', 'Fmoc-Val-OH', 'Fmoc-Val-OH', 339.39)
+)
+insert into public.reagents (
+  code,
+  display_name,
+  category,
+  building_block,
+  molecular_weight,
+  billing_unit,
+  package_quantity,
+  package_unit,
+  package_cost,
+  normalized_unit_cost,
+  supplier,
+  active
+)
+select
+  seed.code,
+  seed.display_name,
+  'amino_acid',
+  seed.building_block,
+  seed.molecular_weight,
+  '$/g',
+  null,
+  'g',
+  0,
+  0,
+  'PLACEHOLDER - replace with Hematian Lab value',
+  true
+from amino_acid_seed seed
+where not exists (
+  select 1
+  from public.reagents r
+  where r.code = seed.code
+    and r.display_name = seed.display_name
+    and r.category = 'amino_acid'
+);
