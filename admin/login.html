@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Login</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="login">
+    <main class="login-page">
+      <form class="login-card" id="adminLoginForm">
+        <div>
+          <span class="admin-brand-mark" aria-hidden="true">LB</span>
+        </div>
+        <div>
+          <h1>Liberty Blue Admin</h1>
+          <p>Administrator access</p>
+        </div>
+        <div class="field-group">
+          <label for="adminEmail">Email</label>
+          <input id="adminEmail" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field-group">
+          <label for="adminPassword">Password</label>
+          <input id="adminPassword" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="login-error" id="adminLoginStatus" role="status" aria-live="polite"></p>
+        <div class="login-actions">
+          <button class="admin-button" type="submit" id="adminSignInButton">
+            <span data-login-label>Sign in</span>
+            <span data-login-loading hidden>Signing in...</span>
+          </button>
+          <button class="admin-link-button" type="button" id="forgotPasswordButton">Forgot password</button>
+        </div>
+      </form>
+    </main>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>
