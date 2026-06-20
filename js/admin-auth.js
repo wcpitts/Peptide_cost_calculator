@@ -9,6 +9,9 @@
   var loginLoading = document.querySelector("[data-login-loading]");
   var isLoginPage = document.body.getAttribute("data-admin-page") === "login";
   var authReady = false;
+  var currentProfile = null;
+  var loginMessageKey = "libertyBlueAdminLoginMessage";
+  var suppressNextSignedOutMessage = false;
 
   function setStatus(message, type) {
     if (!loginStatus) {
@@ -41,7 +44,22 @@
     return "requests.html";
   }
 
-  function redirectToLogin() {
+  function isLocalPreview() {
+    return window.location.protocol === "file:";
+  }
+
+  function allowLocalPreview() {
+    if (!isLoginPage && isLocalPreview()) {
+      document.body.setAttribute("data-auth-state", "local-preview");
+      return true;
+    }
+    return false;
+  }
+
+  function redirectToLogin(message, type) {
+    if (!isLoginPage && message) {
+      queueLoginMessage(message, type || "is-error");
+    }
     if (!isLoginPage) {
       window.location.href = loginUrl();
     }
@@ -53,11 +71,98 @@
     }
   }
 
-  function roleAllowsAdminAccess(session) {
-    // TODO: After the Liberty Blue profiles table and RLS policies exist, read the
-    // user's role from that trusted profile source and enforce admin/reviewer access.
-    // Until then, authentication gates the admin shell but role checks are not enforced.
-    return Boolean(session);
+  function queueLoginMessage(message, type) {
+    try {
+      window.sessionStorage.setItem(loginMessageKey, JSON.stringify({
+        message: message,
+        type: type || "is-error"
+      }));
+    } catch (error) {
+      // Session storage is a convenience for redirect messages; auth still works without it.
+    }
+  }
+
+  function consumeLoginMessage() {
+    if (!isLoginPage) {
+      return;
+    }
+
+    try {
+      var raw = window.sessionStorage.getItem(loginMessageKey);
+      if (!raw) {
+        return;
+      }
+      window.sessionStorage.removeItem(loginMessageKey);
+      var parsed = JSON.parse(raw);
+      if (parsed && parsed.message) {
+        setStatus(parsed.message, parsed.type || "is-muted");
+      }
+    } catch (error) {
+      window.sessionStorage.removeItem(loginMessageKey);
+    }
+  }
+
+  function makeAuthError(message, code) {
+    var error = new Error(message);
+    error.code = code;
+    return error;
+  }
+
+  function friendlyError(error) {
+    var message = error && error.message ? error.message : String(error || "");
+
+    if (/invalid login credentials/i.test(message)) {
+      return "Wrong email or password.";
+    }
+
+    if (/failed to fetch|network|load failed|timeout/i.test(message)) {
+      return "Network or Supabase error. Check your connection and try again.";
+    }
+
+    return message || "Supabase error. Try again.";
+  }
+
+  function roleAllowsAdminAccess(profile) {
+    return Boolean(profile && profile.active && (profile.role === "admin" || profile.role === "reviewer"));
+  }
+
+  function updateUserDisplay(profile) {
+    document.querySelectorAll(".admin-user-chip").forEach(function (chip) {
+      chip.textContent = profile.full_name || profile.email || "Liberty Blue Admin";
+    });
+    document.body.setAttribute("data-admin-role", profile.role || "");
+  }
+
+  async function getAuthorizedProfile(client, session) {
+    if (!session || !session.user || !session.user.id) {
+      throw makeAuthError("No active Supabase session was found. Sign in to continue.", "no_session");
+    }
+
+    var result = await client
+      .from("profiles")
+      .select("id, full_name, email, role, active")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (result.error) {
+      throw makeAuthError("Network or Supabase error while reading your admin profile: " + result.error.message, "profile_error");
+    }
+
+    if (!result.data) {
+      throw makeAuthError("No profile row found for this account. Ask an administrator to create an active admin or reviewer profile.", "no_profile");
+    }
+
+    if (!result.data.active) {
+      throw makeAuthError("This account is inactive. Ask an administrator to reactivate access.", "inactive_profile");
+    }
+
+    if (!roleAllowsAdminAccess(result.data)) {
+      throw makeAuthError("This account is not authorized for the Liberty Blue admin dashboard.", "unauthorized_role");
+    }
+
+    currentProfile = result.data;
+    updateUserDisplay(result.data);
+    return result.data;
   }
 
   async function loadAuth() {
@@ -77,20 +182,48 @@
   function handleMissingConfig(config) {
     if (isLoginPage) {
       setStatus(config.message, "is-muted");
+      setLoading(false);
+    } else if (allowLocalPreview()) {
+      return;
+    } else {
+      redirectToLogin(config.message, "is-muted");
     }
   }
 
   async function restoreSession(client) {
     var result = await client.auth.getSession();
-    var session = result && result.data ? result.data.session : null;
-
-    if (session && roleAllowsAdminAccess(session)) {
-      redirectToRequests();
-      return session;
+    if (result.error) {
+      throw result.error;
     }
 
-    if (!session && !isLoginPage) {
-      redirectToLogin();
+    var session = result && result.data ? result.data.session : null;
+
+    if (!session) {
+      if (allowLocalPreview()) {
+        return null;
+      }
+      if (!isLoginPage) {
+        redirectToLogin("Sign in to access the Liberty Blue admin dashboard.", "is-muted");
+      }
+      return null;
+    }
+
+    try {
+      await getAuthorizedProfile(client, session);
+    } catch (error) {
+      suppressNextSignedOutMessage = true;
+      await client.auth.signOut();
+      redirectToLogin(friendlyError(error), "is-error");
+      if (isLoginPage) {
+        setStatus(friendlyError(error), "is-error");
+      }
+      return null;
+    }
+
+    if (isLoginPage) {
+      setStatus("Signed in. Opening dashboard...", "is-success");
+      redirectToRequests();
+      return session;
     }
 
     return session;
@@ -99,12 +232,30 @@
   function listenForAuthChanges(client) {
     client.auth.onAuthStateChange(function (event, session) {
       if (event === "SIGNED_OUT") {
-        redirectToLogin();
+        currentProfile = null;
+        if (allowLocalPreview()) {
+          return;
+        }
+        if (suppressNextSignedOutMessage) {
+          suppressNextSignedOutMessage = false;
+          return;
+        }
+        redirectToLogin("Signed out.", "is-muted");
         return;
       }
 
-      if (session && roleAllowsAdminAccess(session)) {
-        redirectToRequests();
+      if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
+        getAuthorizedProfile(client, session).then(function () {
+          redirectToRequests();
+        }).catch(function (error) {
+          suppressNextSignedOutMessage = true;
+          client.auth.signOut();
+          if (isLoginPage) {
+            setStatus(friendlyError(error), "is-error");
+          } else {
+            redirectToLogin(friendlyError(error), "is-error");
+          }
+        });
       }
     });
   }
@@ -122,21 +273,26 @@
     });
 
     if (result.error) {
-      throw result.error;
+      throw makeAuthError(friendlyError(result.error), "sign_in_error");
     }
 
-    if (!roleAllowsAdminAccess(result.data.session)) {
-      throw new Error("Your account is not authorized for the Liberty Blue admin dashboard.");
-    }
-
+    await getAuthorizedProfile(auth.client, result.data.session);
+    setStatus("Signed in. Opening dashboard...", "is-success");
     redirectToRequests();
   }
 
   async function signOut() {
+    if (isLocalPreview() && !isLoginPage) {
+      queueLoginMessage("Signed out.", "is-muted");
+      window.location.href = loginUrl();
+      return;
+    }
+
     var auth = await loadAuth();
     if (auth.client) {
       await auth.client.auth.signOut();
     }
+    queueLoginMessage("Signed out.", "is-muted");
     window.location.href = loginUrl();
   }
 
@@ -152,7 +308,7 @@
     });
 
     if (result.error) {
-      throw result.error;
+      throw makeAuthError(friendlyError(result.error), "password_reset_error");
     }
 
     setStatus("Password reset email requested.", "is-success");
@@ -179,7 +335,7 @@
       try {
         await signIn(email, password);
       } catch (error) {
-        setStatus(error.message || "Unable to sign in.", "is-error");
+        setStatus(friendlyError(error), "is-error");
       } finally {
         setLoading(false);
       }
@@ -202,7 +358,7 @@
       try {
         await requestPasswordReset(email);
       } catch (error) {
-        setStatus(error.message || "Unable to request a password reset.", "is-error");
+        setStatus(friendlyError(error), "is-error");
       } finally {
         setLoading(false);
       }
@@ -222,6 +378,12 @@
     bindLoginForm();
     bindPasswordReset();
     bindSignOutLinks();
+    consumeLoginMessage();
+
+    if (allowLocalPreview()) {
+      authReady = true;
+      return;
+    }
 
     try {
       var auth = await loadAuth();
@@ -236,7 +398,12 @@
       authReady = true;
     } catch (error) {
       if (isLoginPage) {
-        setStatus(error.message || "Unable to initialize authentication.", "is-error");
+        setStatus(friendlyError(error) || "Unable to initialize authentication.", "is-error");
+      } else if (allowLocalPreview()) {
+        authReady = true;
+        return;
+      } else {
+        redirectToLogin(friendlyError(error), "is-error");
       }
       authReady = true;
     }
@@ -248,6 +415,9 @@
     restoreSession: restoreSession,
     signIn: signIn,
     signOut: signOut,
+    getCurrentProfile: function () {
+      return currentProfile;
+    },
     isReady: function () {
       return authReady;
     }
