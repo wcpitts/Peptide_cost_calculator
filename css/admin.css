@@ -298,7 +298,8 @@ body.admin-body :focus-visible {
 .admin-button,
 .admin-icon-button,
 .admin-link-button,
-.admin-small-button {
+.admin-small-button,
+.admin-text-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -379,6 +380,20 @@ body.admin-body :focus-visible {
   min-height: 32px;
   padding: 6px 9px;
   font-size: 0.82rem;
+}
+
+.admin-text-link {
+  display: inline;
+  border: 0;
+  background: transparent;
+  color: var(--admin-blue-dark);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-text-link:hover,
+.admin-text-link:focus-visible {
+  text-decoration: underline;
 }
 
 .summary-grid {
@@ -689,7 +704,8 @@ body.admin-body :focus-visible {
 }
 
 .category-badge,
-.active-indicator {
+.active-indicator,
+.role-badge {
   display: inline-flex;
   align-items: center;
   min-height: 27px;
@@ -751,6 +767,26 @@ body.admin-body :focus-visible {
 }
 
 .active-indicator.is-inactive {
+  background: var(--admin-gray-soft);
+  color: #526173;
+}
+
+.role-admin {
+  background: var(--admin-blue-soft);
+  color: var(--admin-blue-dark);
+}
+
+.role-reviewer {
+  background: var(--admin-green-soft);
+  color: var(--admin-green);
+}
+
+.role-requester {
+  background: var(--admin-amber-soft);
+  color: var(--admin-amber);
+}
+
+.role-inactive {
   background: var(--admin-gray-soft);
   color: #526173;
 }
@@ -964,6 +1000,47 @@ body.admin-body :focus-visible {
 
 .solvents-filter-grid {
   grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 0.8fr) minmax(170px, 0.8fr) auto;
+}
+
+.users-filter-grid {
+  grid-template-columns: minmax(220px, 1.5fr) minmax(170px, 0.8fr) minmax(170px, 0.8fr) auto;
+}
+
+.users-table {
+  min-width: 1120px;
+}
+
+.users-secondary-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.78fr) minmax(0, 1.22fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.invite-user-form {
+  display: grid;
+  gap: 14px;
+}
+
+.permission-matrix-table {
+  min-width: 680px;
+}
+
+.permission-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--admin-gray-soft);
+  color: #526173;
+  font-weight: 900;
+}
+
+.permission-mark.is-allowed {
+  background: var(--admin-green-soft);
+  color: var(--admin-green);
 }
 
 .solvents-workspace-grid {
@@ -1364,6 +1441,10 @@ body.admin-body :focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .users-secondary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .requests-side-column {
     position: static;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1464,6 +1545,7 @@ body.admin-body :focus-visible {
   .requests-side-column,
   .filter-grid,
   .solvents-filter-grid,
+  .users-filter-grid,
   .preview-meta-grid {
     grid-template-columns: 1fr;
   }

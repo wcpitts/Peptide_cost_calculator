@@ -23,49 +23,230 @@
           <section class="admin-page-header">
             <div>
               <h1>Users &amp; Permissions</h1>
-              <p>Administrator, reviewer, and requester access control</p>
+              <p>Manage administrator, reviewer, and requester access for the Liberty Blue dashboard</p>
             </div>
           </section>
 
-          <section class="summary-grid summary-grid-compact" aria-label="Users and permissions summary">
-            <article class="summary-card is-blue">
-              <span>Admin Seats</span>
-              <strong>2</strong>
-              <small>Mock profiles</small>
-            </article>
-            <article class="summary-card is-green">
-              <span>Reviewer Seats</span>
-              <strong>3</strong>
-              <small>Preview access model</small>
-            </article>
-          </section>
+          <section class="summary-grid summary-grid-compact" id="usersSummaryGrid" aria-label="Users and permissions summary"></section>
 
-          <section class="admin-panel placeholder-feature-card" aria-labelledby="usersPlaceholderHeading">
+          <section class="policy-banner" aria-labelledby="accessPolicyHeading">
+            <div class="policy-banner-icon" aria-hidden="true">i</div>
             <div>
-              <h2 id="usersPlaceholderHeading">Role and profile administration</h2>
-              <p>This page will manage active profiles, administrator privileges, reviewer access, requester visibility, and onboarding for Liberty Blue dashboard users.</p>
+              <h2 id="accessPolicyHeading">Access policy</h2>
+              <p>Only active administrators and reviewers may access the Liberty Blue admin dashboard. Requesters may submit and view their own requests only. Role permissions are enforced by Supabase Row Level Security, not only by front-end buttons.</p>
             </div>
-            <div class="placeholder-card-grid">
-              <article class="admin-card">
-                <h3>Roles</h3>
-                <div class="metric-line"><span>Admin</span><strong>Full access</strong></div>
-                <div class="metric-line"><span>Reviewer</span><strong>Review queue</strong></div>
-              </article>
-              <article class="admin-card">
-                <h3>Requester access</h3>
-                <div class="metric-line"><span>Own requests</span><strong>Planned</strong></div>
-                <div class="metric-line"><span>External notes</span><strong>Planned</strong></div>
-              </article>
+          </section>
+
+          <section class="filters-panel" aria-labelledby="userFiltersHeading">
+            <div class="admin-section-heading">
+              <div>
+                <h2 id="userFiltersHeading">Directory Controls</h2>
+                <p>Filter local mock profile records before Supabase Auth integration</p>
+              </div>
             </div>
-            <div class="placeholder-card-actions">
-              <button class="admin-button" type="button" disabled>Invite User</button>
-              <p class="mock-note">Backend integration will be added later.</p>
+            <div class="filter-grid users-filter-grid">
+              <div class="field-group">
+                <label for="userSearch">Search users</label>
+                <input id="userSearch" type="search" placeholder="Name, email, role, lab, or department">
+              </div>
+              <div class="field-group">
+                <label for="userRoleFilter">Role filter</label>
+                <select id="userRoleFilter"></select>
+              </div>
+              <label class="toggle-card" for="userActiveOnlyFilter">
+                <input id="userActiveOnlyFilter" type="checkbox">
+                <span>Active-only filter</span>
+              </label>
+              <div class="filter-actions">
+                <button class="admin-button" type="button" id="applyUserFiltersButton">Filter</button>
+                <button class="admin-button admin-button-ghost" type="button" id="clearUserFiltersButton">Clear</button>
+                <button class="admin-button" type="button" id="addUserButton">+ Add User</button>
+              </div>
             </div>
+          </section>
+
+          <section class="admin-panel" aria-labelledby="userDirectoryHeading">
+            <div class="admin-section-heading">
+              <div>
+                <h2 id="userDirectoryHeading">User Access Directory</h2>
+                <p>Mock access records for Liberty Blue dashboard users</p>
+              </div>
+            </div>
+            <div class="table-shell">
+              <table class="admin-data-table users-table" id="userDirectoryTable">
+                <caption>Mock Liberty Blue user access directory</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Active</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Lab / Department</th>
+                    <th scope="col">Last Sign In</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+            <p class="empty-state" id="usersEmptyState" hidden>No mock users match the current filters.</p>
+          </section>
+
+          <section class="users-secondary-grid">
+            <article class="admin-panel" aria-labelledby="inviteUserHeading">
+              <div class="admin-section-heading">
+                <div>
+                  <h2 id="inviteUserHeading">Invite User</h2>
+                  <p>In the production version, invitations will be sent through Supabase Auth. The first administrator must be bootstrapped manually before normal user management is available.</p>
+                </div>
+              </div>
+              <form class="invite-user-form" id="inviteUserForm">
+                <div class="field-group">
+                  <label for="inviteEmailInput">Email</label>
+                  <input id="inviteEmailInput" type="email" placeholder="new.user@example.edu">
+                </div>
+                <div class="drawer-form-grid">
+                  <div class="field-group">
+                    <label for="inviteRoleInput">Proposed role</label>
+                    <select id="inviteRoleInput">
+                      <option value="Admin">Admin</option>
+                      <option value="Reviewer" selected>Reviewer</option>
+                      <option value="Requester">Requester</option>
+                    </select>
+                  </div>
+                  <div class="field-group">
+                    <label for="inviteLabInput">Lab / Department</label>
+                    <input id="inviteLabInput" type="text" placeholder="Hematian Lab">
+                  </div>
+                </div>
+                <div class="placeholder-card-actions">
+                  <button class="admin-button" type="submit" id="sendInvitationButton">Send invitation</button>
+                  <p class="mock-note" id="inviteStatus" role="status" aria-live="polite">Mock-only invitation preview.</p>
+                </div>
+              </form>
+            </article>
+
+            <article class="admin-panel" aria-labelledby="permissionMatrixHeading">
+              <div class="admin-section-heading">
+                <div>
+                  <h2 id="permissionMatrixHeading">Permission Matrix</h2>
+                  <p>Planned role behavior for front-end states and Supabase RLS policies</p>
+                </div>
+              </div>
+              <div class="table-shell">
+                <table class="admin-data-table permission-matrix-table">
+                  <caption>Liberty Blue permission matrix by role</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Capability</th>
+                      <th scope="col">Admin</th>
+                      <th scope="col">Reviewer</th>
+                      <th scope="col">Requester</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td data-label="Capability">View admin dashboard</td>
+                      <td data-label="Admin"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Requester"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                    </tr>
+                    <tr>
+                      <td data-label="Capability">View all synthesis requests</td>
+                      <td data-label="Admin"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Requester"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                    </tr>
+                    <tr>
+                      <td data-label="Capability">Approve or reject requests</td>
+                      <td data-label="Admin"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Requester"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                    </tr>
+                    <tr>
+                      <td data-label="Capability">Edit reagent prices</td>
+                      <td data-label="Admin"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                      <td data-label="Requester"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                    </tr>
+                    <tr>
+                      <td data-label="Capability">Manage users</td>
+                      <td data-label="Admin"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                      <td data-label="Requester"><span class="permission-mark" aria-label="Not allowed">-</span></td>
+                    </tr>
+                    <tr>
+                      <td data-label="Capability">Submit request</td>
+                      <td data-label="Admin"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                      <td data-label="Requester"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                    </tr>
+                    <tr>
+                      <td data-label="Capability">View own request only</td>
+                      <td data-label="Admin"><span class="permission-mark" aria-label="Not applicable">-</span></td>
+                      <td data-label="Reviewer"><span class="permission-mark" aria-label="Not applicable">-</span></td>
+                      <td data-label="Requester"><span class="permission-mark is-allowed" aria-label="Allowed">&#10003;</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
           </section>
         </main>
       </div>
     </div>
+
+    <div class="drawer-backdrop" id="userDrawerBackdrop"></div>
+    <aside class="request-drawer pricing-drawer" id="userDrawer" aria-label="Edit user access">
+      <header class="drawer-header">
+        <div class="drawer-title-group">
+          <h2>Edit User Access</h2>
+          <span class="status-badge" id="userDrawerActiveStatus">Active</span>
+        </div>
+        <button class="admin-icon-button admin-button-ghost" type="button" id="userDrawerCloseButton" aria-label="Close user access editor">x</button>
+      </header>
+      <form class="drawer-body pricing-form" id="userEditForm">
+        <input id="userRecordId" type="hidden">
+        <div class="field-group">
+          <label for="userFullNameInput">Full name</label>
+          <input id="userFullNameInput" type="text" required>
+        </div>
+        <div class="field-group">
+          <label for="userEmailInput">Email</label>
+          <input id="userEmailInput" type="email" required>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="userRoleInput">Role</label>
+            <select id="userRoleInput" required>
+              <option value="Admin">Admin</option>
+              <option value="Reviewer">Reviewer</option>
+              <option value="Requester">Requester</option>
+            </select>
+          </div>
+          <label class="toggle-card drawer-toggle" for="userActiveInput">
+            <input id="userActiveInput" type="checkbox">
+            <span>Active toggle</span>
+          </label>
+        </div>
+        <div class="field-group">
+          <label for="userLabInput">Lab / Department</label>
+          <input id="userLabInput" type="text" required>
+        </div>
+        <div class="field-group">
+          <label for="userNotesInput">Notes</label>
+          <textarea id="userNotesInput" rows="4"></textarea>
+        </div>
+      </form>
+      <footer class="drawer-actions drawer-actions-two">
+        <button class="admin-button admin-button-ghost" type="button" id="cancelUserEditButton">Cancel</button>
+        <button class="admin-button" type="submit" form="userEditForm">Save Changes</button>
+      </footer>
+    </aside>
+
     <script src="../js/admin-layout.js"></script>
+    <script src="../js/admin-users.js"></script>
     <script src="../js/supabase-client.js"></script>
     <script src="../js/admin-auth.js"></script>
   </body>
