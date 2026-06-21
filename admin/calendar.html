@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Calendar & Schedule</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="calendar">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Instrument scheduling workspace</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Calendar &amp; Schedule</h1>
+              <p>Instrument scheduling workspace</p>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" aria-label="Schedule summary">
+            <article class="summary-card is-blue">
+              <span>Scheduled Runs</span>
+              <strong>4</strong>
+              <small>Mock seven-day view</small>
+            </article>
+            <article class="summary-card is-green">
+              <span>Open Capacity</span>
+              <strong>2</strong>
+              <small>Preview instrument windows</small>
+            </article>
+          </section>
+
+          <section class="admin-panel placeholder-feature-card" aria-labelledby="calendarPlaceholderHeading">
+            <div>
+              <h2 id="calendarPlaceholderHeading">Liberty Blue run planning</h2>
+              <p>This page will manage instrument reservations, target completion dates, schedule conflicts, and queue placement for approved synthesis requests.</p>
+            </div>
+            <div class="placeholder-card-grid">
+              <article class="admin-card">
+                <h3>Upcoming slots</h3>
+                <div class="metric-line"><span>Morning runs</span><strong>Preview</strong></div>
+                <div class="metric-line"><span>Afternoon runs</span><strong>Preview</strong></div>
+              </article>
+              <article class="admin-card">
+                <h3>Queue health</h3>
+                <div class="metric-line"><span>Overdue targets</span><strong>0</strong></div>
+                <div class="metric-line"><span>Needs scheduling</span><strong>5</strong></div>
+              </article>
+            </div>
+            <div class="placeholder-card-actions">
+              <button class="admin-button" type="button" disabled>Schedule Run</button>
+              <p class="mock-note">Backend integration will be added later.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>

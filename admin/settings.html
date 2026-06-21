@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Settings</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="settings">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Application configuration and safety policies</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Settings</h1>
+              <p>Application configuration and safety policies</p>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" aria-label="Settings summary">
+            <article class="summary-card is-blue">
+              <span>Safety Policies</span>
+              <strong>3</strong>
+              <small>Mock policy groups</small>
+            </article>
+            <article class="summary-card is-green">
+              <span>Auth Mode</span>
+              <strong>Password</strong>
+              <small>Supabase Auth planned</small>
+            </article>
+          </section>
+
+          <section class="admin-panel placeholder-feature-card" aria-labelledby="settingsPlaceholderHeading">
+            <div>
+              <h2 id="settingsPlaceholderHeading">Configuration and safety controls</h2>
+              <p>This page will manage review policies, notification defaults, instrument profile settings, cost calculation guardrails, and administrative safety controls.</p>
+            </div>
+            <div class="placeholder-card-grid">
+              <article class="admin-card">
+                <h3>Review policy</h3>
+                <div class="metric-line"><span>Default review state</span><strong>Pending Review</strong></div>
+                <div class="metric-line"><span>PI notification</span><strong>Manual</strong></div>
+              </article>
+              <article class="admin-card">
+                <h3>Instrument profile</h3>
+                <div class="metric-line"><span>System</span><strong>Liberty Blue 2.0</strong></div>
+                <div class="metric-line"><span>Pricing source</span><strong>Preview data</strong></div>
+              </article>
+            </div>
+            <div class="placeholder-card-actions">
+              <button class="admin-button" type="button" disabled>Save Settings</button>
+              <p class="mock-note">Backend integration will be added later.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>

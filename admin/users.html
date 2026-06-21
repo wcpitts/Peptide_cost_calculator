@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Users & Permissions</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="users">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Access control workspace</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Users &amp; Permissions</h1>
+              <p>Administrator, reviewer, and requester access control</p>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" aria-label="Users and permissions summary">
+            <article class="summary-card is-blue">
+              <span>Admin Seats</span>
+              <strong>2</strong>
+              <small>Mock profiles</small>
+            </article>
+            <article class="summary-card is-green">
+              <span>Reviewer Seats</span>
+              <strong>3</strong>
+              <small>Preview access model</small>
+            </article>
+          </section>
+
+          <section class="admin-panel placeholder-feature-card" aria-labelledby="usersPlaceholderHeading">
+            <div>
+              <h2 id="usersPlaceholderHeading">Role and profile administration</h2>
+              <p>This page will manage active profiles, administrator privileges, reviewer access, requester visibility, and onboarding for Liberty Blue dashboard users.</p>
+            </div>
+            <div class="placeholder-card-grid">
+              <article class="admin-card">
+                <h3>Roles</h3>
+                <div class="metric-line"><span>Admin</span><strong>Full access</strong></div>
+                <div class="metric-line"><span>Reviewer</span><strong>Review queue</strong></div>
+              </article>
+              <article class="admin-card">
+                <h3>Requester access</h3>
+                <div class="metric-line"><span>Own requests</span><strong>Planned</strong></div>
+                <div class="metric-line"><span>External notes</span><strong>Planned</strong></div>
+              </article>
+            </div>
+            <div class="placeholder-card-actions">
+              <button class="admin-button" type="button" disabled>Invite User</button>
+              <p class="mock-note">Backend integration will be added later.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>

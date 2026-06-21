@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Reports & Exports</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="reports">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Reporting and exports workspace</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Reports &amp; Exports</h1>
+              <p>Request, cost, and reagent usage reports</p>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" aria-label="Reports summary">
+            <article class="summary-card is-blue">
+              <span>Report Types</span>
+              <strong>3</strong>
+              <small>Mock report catalog</small>
+            </article>
+            <article class="summary-card is-amber">
+              <span>Export Jobs</span>
+              <strong>0</strong>
+              <small>Waiting for backend queue</small>
+            </article>
+          </section>
+
+          <section class="admin-panel placeholder-feature-card" aria-labelledby="reportsPlaceholderHeading">
+            <div>
+              <h2 id="reportsPlaceholderHeading">Operational reporting</h2>
+              <p>This page will prepare request volume, cost summary, reagent usage, PI/lab activity, and audit exports for administrators and reviewers.</p>
+            </div>
+            <div class="placeholder-card-grid">
+              <article class="admin-card">
+                <h3>Planned exports</h3>
+                <div class="metric-line"><span>Request ledger</span><strong>CSV</strong></div>
+                <div class="metric-line"><span>Cost snapshots</span><strong>CSV</strong></div>
+              </article>
+              <article class="admin-card">
+                <h3>Usage views</h3>
+                <div class="metric-line"><span>Top reagents</span><strong>Preview</strong></div>
+                <div class="metric-line"><span>PI activity</span><strong>Preview</strong></div>
+              </article>
+            </div>
+            <div class="placeholder-card-actions">
+              <button class="admin-button" type="button" disabled>Export Report</button>
+              <p class="mock-note">Backend integration will be added later.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>

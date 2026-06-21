@@ -2,14 +2,14 @@
   "use strict";
 
   var navItems = [
-    { key: "dashboard", label: "Dashboard", href: "requests.html", icon: "DB" },
+    { key: "dashboard", label: "Dashboard", href: "dashboard.html", icon: "DB" },
     { key: "requests", label: "Synthesis Requests", href: "requests.html", icon: "SR" },
-    { key: "calendar", label: "Calendar & Schedule", href: "requests.html", icon: "CS" },
+    { key: "calendar", label: "Calendar & Schedule", href: "calendar.html", icon: "CS" },
     { key: "reagents", label: "Reagents & Prices", href: "reagents.html", icon: "RP" },
-    { key: "solvents", label: "Solvents & Consumables", href: "reagents.html", icon: "SC" },
-    { key: "users", label: "Users & Permissions", href: "settings.html", icon: "UP" },
-    { key: "reports", label: "Reports & Exports", href: "price-history.html", icon: "RE" },
-    { key: "logs", label: "Instrument Logs", href: "settings.html", icon: "IL" },
+    { key: "solvents", label: "Solvents & Consumables", href: "solvents.html", icon: "SC" },
+    { key: "users", label: "Users & Permissions", href: "users.html", icon: "UP" },
+    { key: "reports", label: "Reports & Exports", href: "reports.html", icon: "RE" },
+    { key: "logs", label: "Instrument Logs", href: "logs.html", icon: "IL" },
     { key: "settings", label: "Settings", href: "settings.html", icon: "ST" }
   ];
 

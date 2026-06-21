@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Solvents & Consumables</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="solvents">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Solvent and consumable assumptions</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Solvents &amp; Consumables</h1>
+              <p>Control solvent, deprotection, resin, vessel, and consumable cost assumptions for Liberty Blue 2.0 requests</p>
+            </div>
+            <div class="admin-page-actions">
+              <button class="admin-button" type="button" id="addSolventItemButton">+ Add Item</button>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" id="solventSummaryGrid" aria-label="Solvents and consumables summary"></section>
+
+          <section class="policy-banner" aria-labelledby="solventPolicyHeading">
+            <div class="policy-banner-icon" aria-hidden="true">i</div>
+            <div>
+              <h2 id="solventPolicyHeading">Hematian Lab solvent policy</h2>
+              <p>DMF and pyrrolidine must be supplied by the Hematian Lab for all Liberty Blue 2.0 syntheses. Requester-supplied DMF or pyrrolidine is not permitted. Amino acids may be requester-supplied only after approval.</p>
+            </div>
+          </section>
+
+          <section class="filters-panel" aria-labelledby="solventFiltersHeading">
+            <div class="admin-section-heading">
+              <div>
+                <h2 id="solventFiltersHeading">Catalog Controls</h2>
+                <p>Review mock cost assumptions for solvents, resin, vessels, waste, and service charges</p>
+              </div>
+            </div>
+            <div class="filter-grid solvents-filter-grid">
+              <div class="field-group">
+                <label for="solventCatalogSearch">Search item</label>
+                <input id="solventCatalogSearch" type="search" placeholder="DMF, resin, vessel, supplier, catalog number">
+              </div>
+              <div class="field-group">
+                <label for="solventCategoryFilter">Category filter</label>
+                <select id="solventCategoryFilter"></select>
+              </div>
+              <label class="toggle-card" for="solventActiveOnlyFilter">
+                <input id="solventActiveOnlyFilter" type="checkbox">
+                <span>Active-only filter</span>
+              </label>
+              <div class="filter-actions">
+                <button class="admin-button" type="button" id="applySolventFiltersButton">Filter</button>
+                <button class="admin-button admin-button-ghost" type="button" id="clearSolventFiltersButton">Clear</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-panel" aria-labelledby="solventCatalogHeading">
+            <div class="admin-section-heading">
+              <div>
+                <h2 id="solventCatalogHeading">Solvent and reagent catalog</h2>
+                <p>Mock local records for non-amino-acid estimate inputs</p>
+              </div>
+            </div>
+            <div class="table-shell">
+              <table class="admin-data-table pricing-table" id="solventCatalogTable">
+                <caption>Mock Liberty Blue solvent and consumable catalog</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Active</th>
+                    <th scope="col">Item</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Billing Unit</th>
+                    <th scope="col">Package Size</th>
+                    <th scope="col">Package Cost</th>
+                    <th scope="col">Normalized Unit Cost</th>
+                    <th scope="col">Supplier</th>
+                    <th scope="col">Catalog Number</th>
+                    <th scope="col">Effective Date</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="solventTableBody"></tbody>
+              </table>
+            </div>
+            <p class="empty-state" id="solventEmptyState" hidden>No mock solvent or consumable records match the current filters.</p>
+          </section>
+
+          <section class="solvents-workspace-grid">
+            <article class="admin-panel" aria-labelledby="methodAssumptionsHeading">
+              <div class="admin-section-heading">
+                <div>
+                  <h2 id="methodAssumptionsHeading">Method Volume Assumptions</h2>
+                  <p>These assumptions are used by the calculator to estimate Hematian Lab DMF and pyrrolidine costs. Values should be replaced with measured Liberty Blue 2.0 usage values before production use.</p>
+                </div>
+              </div>
+              <div class="method-input-grid">
+                <div class="field-group">
+                  <label for="dmfCouplingVolumeInput">DMF volume per coupling cycle at 0.10 mmol</label>
+                  <input id="dmfCouplingVolumeInput" type="number" min="0" step="0.1" inputmode="decimal" value="7.5">
+                </div>
+                <div class="field-group">
+                  <label for="dmfDeprotectionVolumeInput">DMF volume per deprotection cycle at 0.10 mmol</label>
+                  <input id="dmfDeprotectionVolumeInput" type="number" min="0" step="0.1" inputmode="decimal" value="4.5">
+                </div>
+                <div class="field-group">
+                  <label for="dmfWashVolumeInput">DMF volume per wash cycle at 0.10 mmol</label>
+                  <input id="dmfWashVolumeInput" type="number" min="0" step="0.1" inputmode="decimal" value="3.0">
+                </div>
+                <div class="field-group">
+                  <label for="pyrrolidineSolutionVolumeInput">Pyrrolidine solution volume per deprotection at 0.10 mmol</label>
+                  <input id="pyrrolidineSolutionVolumeInput" type="number" min="0" step="0.1" inputmode="decimal" value="4.0">
+                </div>
+                <div class="field-group">
+                  <label for="standardWashCountInput">Default number of washes for standard wash method</label>
+                  <input id="standardWashCountInput" type="number" min="0" step="1" inputmode="numeric" value="3">
+                </div>
+                <div class="field-group">
+                  <label for="resinLoadingNoteInput">Default resin excess / loading note</label>
+                  <input id="resinLoadingNoteInput" type="text" value="Mock 2.5 eq resin charge; verify loading before production">
+                </div>
+                <div class="field-group">
+                  <label for="wasteFactorInput">Waste factor percentage</label>
+                  <input id="wasteFactorInput" type="number" min="0" step="0.1" inputmode="decimal" value="8">
+                </div>
+                <div class="field-group">
+                  <label for="contingencyPercentInput">Contingency percentage</label>
+                  <input id="contingencyPercentInput" type="number" min="0" step="0.1" inputmode="decimal" value="10">
+                </div>
+              </div>
+            </article>
+
+            <article class="admin-panel" aria-labelledby="costPreviewHeading">
+              <div class="admin-section-heading">
+                <div>
+                  <h2 id="costPreviewHeading">Example Cost Preview</h2>
+                  <p>Mock estimate for an 8 amino acid sequence at 0.10 mmol using standard coupling and standard washes</p>
+                </div>
+              </div>
+              <div class="preview-meta-grid" aria-label="Example request inputs">
+                <div><span>Sequence length</span><strong>8 amino acids</strong></div>
+                <div><span>Scale</span><strong>0.10 mmol</strong></div>
+                <div><span>Coupling mode</span><strong>Standard</strong></div>
+                <div><span>Washes</span><strong>Standard</strong></div>
+              </div>
+              <div class="table-shell">
+                <table class="admin-data-table cost-preview-table">
+                  <caption>Mock solvent and consumable cost preview</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Cost Input</th>
+                      <th scope="col">Mock Basis</th>
+                      <th scope="col">Estimated Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody id="solventPreviewBody"></tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="drawer-backdrop" id="solventDrawerBackdrop"></div>
+    <aside class="request-drawer pricing-drawer" id="solventDrawer" aria-label="Edit solvent or consumable">
+      <header class="drawer-header">
+        <div class="drawer-title-group">
+          <h2 id="solventDrawerTitle">Edit Solvent or Consumable</h2>
+          <span class="status-badge" id="solventDrawerActiveStatus">Active</span>
+        </div>
+        <button class="admin-icon-button admin-button-ghost" type="button" id="solventDrawerCloseButton" aria-label="Close solvent or consumable editor">x</button>
+      </header>
+      <form class="drawer-body pricing-form" id="solventEditForm">
+        <input id="solventRecordId" type="hidden">
+        <div class="field-group">
+          <label for="solventDisplayNameInput">Display name</label>
+          <input id="solventDisplayNameInput" type="text" required>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="solventCategoryInput">Category</label>
+            <select id="solventCategoryInput" required></select>
+          </div>
+          <div class="field-group">
+            <label for="solventBillingUnitInput">Billing unit</label>
+            <select id="solventBillingUnitInput" required>
+              <option value="g">g</option>
+              <option value="L">L</option>
+              <option value="mL">mL</option>
+              <option value="item">item</option>
+            </select>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="solventPackageQuantityInput">Package quantity</label>
+            <input id="solventPackageQuantityInput" type="number" min="0.0001" step="0.0001" inputmode="decimal" required>
+          </div>
+          <div class="field-group">
+            <label for="solventPackageUnitInput">Package unit</label>
+            <select id="solventPackageUnitInput" required>
+              <option value="g">g</option>
+              <option value="L">L</option>
+              <option value="mL">mL</option>
+              <option value="item">item</option>
+            </select>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="solventPackageCostInput">Package cost</label>
+            <input id="solventPackageCostInput" type="number" min="0" step="0.01" inputmode="decimal" required>
+          </div>
+          <div class="field-group">
+            <label for="solventCalculatedUnitCostInput">Calculated normalized unit cost</label>
+            <input id="solventCalculatedUnitCostInput" type="text" readonly>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="solventSupplierInput">Supplier</label>
+            <input id="solventSupplierInput" type="text" required>
+          </div>
+          <div class="field-group">
+            <label for="solventCatalogNumberInput">Catalog number</label>
+            <input id="solventCatalogNumberInput" type="text">
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="solventEffectiveDateInput">Effective date</label>
+            <input id="solventEffectiveDateInput" type="date" required>
+          </div>
+          <label class="toggle-card drawer-toggle" for="solventActiveInput">
+            <input id="solventActiveInput" type="checkbox">
+            <span>Active toggle</span>
+          </label>
+        </div>
+        <div class="field-group">
+          <label for="solventNotesInput">Notes</label>
+          <textarea id="solventNotesInput" rows="4"></textarea>
+        </div>
+      </form>
+      <footer class="drawer-actions drawer-actions-two">
+        <button class="admin-button admin-button-ghost" type="button" id="cancelSolventEditButton">Cancel</button>
+        <button class="admin-button" type="submit" form="solventEditForm">Save Changes</button>
+      </footer>
+    </aside>
+
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/admin-solvents.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>

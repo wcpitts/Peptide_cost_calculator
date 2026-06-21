@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Dashboard</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="dashboard">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Liberty Blue administrator overview</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Dashboard</h1>
+              <p>Liberty Blue administrator overview</p>
+            </div>
+            <div class="admin-page-actions">
+              <a class="admin-button" href="requests.html">Open Requests</a>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" aria-label="Dashboard summary">
+            <article class="summary-card is-blue">
+              <span>Open Requests</span>
+              <strong>18</strong>
+              <small>Mock operations queue</small>
+            </article>
+            <article class="summary-card is-amber">
+              <span>Pending Review</span>
+              <strong>6</strong>
+              <small>Awaiting admin action</small>
+            </article>
+            <article class="summary-card is-green">
+              <span>Runs This Week</span>
+              <strong>4</strong>
+              <small>Preview schedule data</small>
+            </article>
+          </section>
+
+          <section class="admin-panel placeholder-feature-card" aria-labelledby="dashboardPlaceholderHeading">
+            <div>
+              <h2 id="dashboardPlaceholderHeading">Operations overview workspace</h2>
+              <p>This page will collect request volume, review backlog, schedule pressure, reagent alerts, and recent Liberty Blue activity in one administrator view.</p>
+            </div>
+            <div class="placeholder-card-grid">
+              <article class="admin-card">
+                <h3>Request triage</h3>
+                <div class="metric-line"><span>Priority queue</span><strong>Preview</strong></div>
+                <div class="metric-line"><span>Cost variance</span><strong>Pending</strong></div>
+              </article>
+              <article class="admin-card">
+                <h3>Instrument readiness</h3>
+                <div class="metric-line"><span>Liberty Blue 2.0</span><strong>Mock ready</strong></div>
+                <div class="metric-line"><span>Maintenance flags</span><strong>0</strong></div>
+              </article>
+            </div>
+            <div class="placeholder-card-actions">
+              <button class="admin-button" type="button" disabled>Connect Live Metrics Later</button>
+              <p class="mock-note">Backend integration will be added later.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>

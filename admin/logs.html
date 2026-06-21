@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty Blue Admin - Instrument Logs</title>
+    <link rel="stylesheet" href="../css/admin.css">
+  </head>
+  <body class="admin-body" data-admin-page="logs">
+    <div class="admin-app">
+      <aside class="admin-sidebar" data-admin-sidebar></aside>
+      <div class="admin-mobile-scrim" data-admin-mobile-scrim></div>
+      <div class="admin-main-shell">
+        <header class="admin-topbar">
+          <button class="admin-icon-button admin-menu-button" type="button" data-admin-menu-button aria-label="Open navigation">+</button>
+          <div class="admin-topbar-title">
+            <span>Administrator dashboard</span>
+            <strong>Run history and audit logs</strong>
+          </div>
+          <span class="admin-user-chip">Hematian Lab Admin</span>
+        </header>
+        <main class="admin-main">
+          <section class="admin-page-header">
+            <div>
+              <h1>Instrument Logs</h1>
+              <p>Liberty Blue run history, maintenance, and audit logs</p>
+            </div>
+          </section>
+
+          <section class="summary-grid summary-grid-compact" aria-label="Instrument logs summary">
+            <article class="summary-card is-blue">
+              <span>Recent Runs</span>
+              <strong>0</strong>
+              <small>Waiting for log import</small>
+            </article>
+            <article class="summary-card is-green">
+              <span>Maintenance Items</span>
+              <strong>0</strong>
+              <small>Mock instrument state</small>
+            </article>
+          </section>
+
+          <section class="admin-panel placeholder-feature-card" aria-labelledby="logsPlaceholderHeading">
+            <div>
+              <h2 id="logsPlaceholderHeading">Instrument activity record</h2>
+              <p>This page will track Liberty Blue run metadata, maintenance notes, synthesis outcomes, operator actions, and audit events tied to request records.</p>
+            </div>
+            <div class="placeholder-card-grid">
+              <article class="admin-card">
+                <h3>Run log fields</h3>
+                <div class="metric-line"><span>Method file</span><strong>Planned</strong></div>
+                <div class="metric-line"><span>Operator</span><strong>Planned</strong></div>
+              </article>
+              <article class="admin-card">
+                <h3>Audit coverage</h3>
+                <div class="metric-line"><span>Status changes</span><strong>Planned</strong></div>
+                <div class="metric-line"><span>Maintenance</span><strong>Planned</strong></div>
+              </article>
+            </div>
+            <div class="placeholder-card-actions">
+              <button class="admin-button" type="button" disabled>Add Log Entry</button>
+              <p class="mock-note">Backend integration will be added later.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="../js/admin-layout.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/admin-auth.js"></script>
+  </body>
+</html>
