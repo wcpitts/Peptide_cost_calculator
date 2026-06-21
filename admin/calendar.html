@@ -23,49 +23,215 @@
           <section class="admin-page-header">
             <div>
               <h1>Calendar &amp; Schedule</h1>
-              <p>Instrument scheduling workspace</p>
+              <p>Plan Liberty Blue 2.0 instrument time, approved syntheses, deadlines, and operator coverage</p>
+            </div>
+            <div class="admin-page-actions">
+              <button class="admin-button" type="button" id="addScheduledRunButton">+ Add Scheduled Run</button>
             </div>
           </section>
 
-          <section class="summary-grid summary-grid-compact" aria-label="Schedule summary">
-            <article class="summary-card is-blue">
-              <span>Scheduled Runs</span>
-              <strong>4</strong>
-              <small>Mock seven-day view</small>
-            </article>
-            <article class="summary-card is-green">
-              <span>Open Capacity</span>
-              <strong>2</strong>
-              <small>Preview instrument windows</small>
-            </article>
+          <section class="summary-grid summary-grid-compact" id="calendarSummaryGrid" aria-label="Calendar summary"></section>
+
+          <section class="filters-panel" aria-labelledby="calendarControlsHeading">
+            <div class="admin-section-heading">
+              <div>
+                <h2 id="calendarControlsHeading">Calendar Controls</h2>
+                <p>Filter mock scheduled runs and switch schedule views</p>
+              </div>
+            </div>
+            <div class="calendar-controls-grid">
+              <div class="period-control-group" aria-label="Calendar period controls">
+                <button class="admin-button admin-button-ghost" type="button" id="previousPeriodButton">Previous</button>
+                <button class="admin-button admin-button-ghost" type="button" id="todayButton">Today</button>
+                <button class="admin-button admin-button-ghost" type="button" id="nextPeriodButton">Next</button>
+              </div>
+              <div class="field-group">
+                <label for="calendarViewSelector">View selector</label>
+                <select id="calendarViewSelector">
+                  <option value="week" selected>Week</option>
+                  <option value="month">Month</option>
+                  <option value="list">List</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label for="calendarSearch">Search request</label>
+                <input id="calendarSearch" type="search" placeholder="Request ID, sequence, PI, requester">
+              </div>
+              <div class="field-group">
+                <label for="calendarStatusFilter">Status filter</label>
+                <select id="calendarStatusFilter"></select>
+              </div>
+              <div class="field-group">
+                <label for="calendarPiFilter">PI / Lab filter</label>
+                <select id="calendarPiFilter"></select>
+              </div>
+            </div>
           </section>
 
-          <section class="admin-panel placeholder-feature-card" aria-labelledby="calendarPlaceholderHeading">
-            <div>
-              <h2 id="calendarPlaceholderHeading">Liberty Blue run planning</h2>
-              <p>This page will manage instrument reservations, target completion dates, schedule conflicts, and queue placement for approved synthesis requests.</p>
+          <section class="calendar-layout-grid">
+            <section class="admin-panel calendar-panel" aria-labelledby="instrumentCalendarHeading">
+              <div class="admin-section-heading">
+                <div>
+                  <h2 id="instrumentCalendarHeading">Liberty Blue Instrument Calendar</h2>
+                  <p id="calendarPeriodLabel">Week of Jun 22, 2026</p>
+                </div>
+                <span class="mock-note" id="calendarViewNote">Week view: Monday through Friday instrument schedule</span>
+              </div>
+              <div id="calendarViewShell"></div>
+              <p class="empty-state" id="calendarEmptyState" hidden>No mock scheduled runs match the current filters.</p>
+            </section>
+
+            <aside class="calendar-side-panels" aria-label="Schedule supporting panels">
+              <section class="admin-card" aria-labelledby="upcomingDeadlinesHeading">
+                <h3 id="upcomingDeadlinesHeading">Upcoming Deadlines</h3>
+                <div class="deadline-card-list" id="deadlineCardList"></div>
+              </section>
+              <section class="admin-card" aria-labelledby="operatorAvailabilityHeading">
+                <h3 id="operatorAvailabilityHeading">Operator Availability</h3>
+                <div class="operator-list" id="operatorAvailabilityList"></div>
+                <p class="mock-note">Operator availability is mock data in this version. Calendar integration may be added later.</p>
+              </section>
+            </aside>
+          </section>
+
+          <section class="admin-panel" aria-labelledby="approvedAwaitingHeading">
+            <div class="admin-section-heading">
+              <div>
+                <h2 id="approvedAwaitingHeading">Approved Requests Awaiting Scheduling</h2>
+                <p>Approved requests ready for Liberty Blue instrument time</p>
+              </div>
             </div>
-            <div class="placeholder-card-grid">
-              <article class="admin-card">
-                <h3>Upcoming slots</h3>
-                <div class="metric-line"><span>Morning runs</span><strong>Preview</strong></div>
-                <div class="metric-line"><span>Afternoon runs</span><strong>Preview</strong></div>
-              </article>
-              <article class="admin-card">
-                <h3>Queue health</h3>
-                <div class="metric-line"><span>Overdue targets</span><strong>0</strong></div>
-                <div class="metric-line"><span>Needs scheduling</span><strong>5</strong></div>
-              </article>
-            </div>
-            <div class="placeholder-card-actions">
-              <button class="admin-button" type="button" disabled>Schedule Run</button>
-              <p class="mock-note">Backend integration will be added later.</p>
+            <div class="table-shell">
+              <table class="admin-data-table approved-schedule-table">
+                <caption>Approved synthesis requests awaiting scheduling</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Request ID</th>
+                    <th scope="col">Peptide Sequence</th>
+                    <th scope="col">PI / Lab</th>
+                    <th scope="col">Scale</th>
+                    <th scope="col">Approved Date</th>
+                    <th scope="col">Target Date</th>
+                    <th scope="col">Estimated Runtime</th>
+                    <th scope="col">Priority</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="approvedScheduleTableBody"></tbody>
+              </table>
             </div>
           </section>
         </main>
       </div>
     </div>
+
+    <div class="calendar-event-popover" id="calendarEventPopover" role="dialog" aria-live="polite" hidden></div>
+
+    <div class="drawer-backdrop" id="scheduleDrawerBackdrop"></div>
+    <aside class="request-drawer pricing-drawer" id="scheduleDrawer" aria-label="Schedule synthesis run">
+      <header class="drawer-header">
+        <div class="drawer-title-group">
+          <h2>Schedule Synthesis Run</h2>
+          <span class="status-badge" id="scheduleDrawerStatus">Scheduled</span>
+        </div>
+        <button class="admin-icon-button admin-button-ghost" type="button" id="scheduleDrawerCloseButton" aria-label="Close schedule editor">x</button>
+      </header>
+      <form class="drawer-body pricing-form" id="scheduleEditForm">
+        <input id="scheduleRecordId" type="hidden">
+        <div class="field-group">
+          <label for="scheduleRequestIdInput">Request ID</label>
+          <input id="scheduleRequestIdInput" type="text" readonly>
+        </div>
+        <div class="field-group">
+          <label for="scheduleSequenceInput">Peptide sequence</label>
+          <input id="scheduleSequenceInput" type="text" readonly>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="schedulePiInput">PI / Lab</label>
+            <input id="schedulePiInput" type="text" readonly>
+          </div>
+          <div class="field-group">
+            <label for="scheduleScaleInput">Scale</label>
+            <input id="scheduleScaleInput" type="text" readonly>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="scheduleTargetDateInput">Target completion date</label>
+            <input id="scheduleTargetDateInput" type="date" readonly>
+          </div>
+          <div class="field-group">
+            <label for="scheduleDateInput">Proposed synthesis date</label>
+            <input id="scheduleDateInput" type="date" required>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="scheduleStartTimeInput">Start time</label>
+            <input id="scheduleStartTimeInput" type="time" required>
+          </div>
+          <div class="field-group">
+            <label for="scheduleRuntimeInput">Estimated runtime</label>
+            <input id="scheduleRuntimeInput" type="text" placeholder="3h 30m" required>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="scheduleOperatorInput">Operator</label>
+            <select id="scheduleOperatorInput" required>
+              <option value="Winston Pitts">Winston Pitts</option>
+              <option value="Hematian Lab Admin">Hematian Lab Admin</option>
+              <option value="Example Reviewer">Example Reviewer</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="scheduleInstrumentStatusInput">Instrument status</label>
+            <select id="scheduleInstrumentStatusInput" required>
+              <option value="Ready">Ready</option>
+              <option value="Needs setup">Needs setup</option>
+              <option value="Maintenance hold">Maintenance hold</option>
+            </select>
+          </div>
+        </div>
+        <div class="drawer-form-grid">
+          <div class="field-group">
+            <label for="schedulePriorityInput">Priority</label>
+            <select id="schedulePriorityInput" required>
+              <option value="Low">Low</option>
+              <option value="Normal">Normal</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="scheduleStatusInput">Status</label>
+            <select id="scheduleStatusInput" required>
+              <option value="Pending Review">Pending Review</option>
+              <option value="Approved">Approved</option>
+              <option value="Scheduled">Scheduled</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Changes Requested">Changes Requested</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="scheduleNotesInput">Scheduling notes</label>
+          <textarea id="scheduleNotesInput" rows="4"></textarea>
+        </div>
+        <div class="conflict-warning" id="scheduleConflictWarning" role="status" aria-live="polite" hidden></div>
+      </form>
+      <footer class="drawer-actions drawer-actions-two">
+        <button class="admin-button admin-button-ghost" type="button" id="cancelScheduleEditButton">Cancel</button>
+        <button class="admin-button" type="submit" form="scheduleEditForm">Save Schedule</button>
+      </footer>
+    </aside>
+
     <script src="../js/admin-layout.js"></script>
+    <script src="../js/admin-calendar.js"></script>
     <script src="../js/supabase-client.js"></script>
     <script src="../js/admin-auth.js"></script>
   </body>
